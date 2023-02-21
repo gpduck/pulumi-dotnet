@@ -9,6 +9,7 @@ using Pulumi.Experimental.Provider;
 public class TestProvider : Provider {
     readonly IHost host;
     int id = 0;
+    Boolean configured = false;
 
     public TestProvider(IHost host) {
         this.host = host;
@@ -26,6 +27,7 @@ public class TestProvider : Provider {
 
     public override Task<ConfigureResponse> Configure(ConfigureRequest request, CancellationToken ct)
     {
+        this.configured = true;
         return Task.FromResult(new ConfigureResponse());
     }
 
@@ -82,6 +84,9 @@ public class TestProvider : Provider {
 
     public override Task<CreateResponse> Create(CreateRequest request, CancellationToken ct)
     {
+        if(!this.configured) {
+            throw new Exception("Create called before configure");
+        }
         if (request.Type == "testprovider:index:Echo") {
             var outputs = new Dictionary<string, PropertyValue>();
             outputs.Add("echo", request.Properties["echo"]);
